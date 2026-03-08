@@ -12,13 +12,13 @@ Clone into your skills directory:
 
 ```bash
 # Claude Code
-git clone https://github.com/YOURNAME/diet-planner ~/.claude/skills/diet-planner
+git clone https://github.com/hugobellamy/diet-planner ~/.claude/skills/diet-planner
 
 # OpenCode (also searches ~/.claude/skills/ and ~/.agents/skills/)
-git clone https://github.com/YOURNAME/diet-planner ~/.config/opencode/skills/diet-planner
+git clone https://github.com/hugobellamydiet-planner ~/.config/opencode/skills/diet-planner
 
 # OpenClaw
-git clone https://github.com/YOURNAME/diet-planner ~/.openclaw/skills/diet-planner
+git clone https://github.com/hugobellamy/diet-planner ~/.openclaw/skills/diet-planner
 ```
 
 Then start a new session and say something like "help me plan my meals for the week".
