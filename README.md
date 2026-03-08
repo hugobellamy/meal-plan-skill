@@ -58,6 +58,19 @@ diet-planner/
     └── profile-template.md
 ```
 
+## Model nutrition accuracy
+
+R² scores from the [Food Nutrition Benchmark](https://github.com/hugobellamy/food-data-benchmark) — how well each LLM estimates calories and macros from food descriptions without internet access.
+
+| Model                  |   Calories |   Protein |    Fat |   Carbs |   Mean R² |
+|:-----------------------|-----------:|----------:|-------:|--------:|----------:|
+| gemini-3-flash-preview |     0.8806 |    0.893  | 0.8736 |  0.8164 |    0.8659 |
+| claude-sonnet-4.6      |     0.8273 |    0.7747 | 0.8253 |  0.7823 |    0.8024 |
+| claude-haiku-4.5       |     0.6371 |    0.6205 | 0.7459 |  0.6861 |    0.6724 |
+| qwen3-235b-a22b-2507   |     0.6664 |    0.5876 | 0.62   |  0.6314 |    0.6264 |
+
+See the [full benchmark](https://github.com/hugobellamy/food-data-benchmark) for soft vs raw prompt breakdowns and methodology.
+
 ## Research sources
 
 Reference docs are distilled from peer-reviewed research: Iraki et al. 2019, Helms et al. 2023, Morton et al. 2018 (sports nutrition); Stanford FeFiFo Study (Cell, 2021), American Gut Project (gut microbiome); Rogerson 2017, Hevia-Larrain et al. 2021 (vegetarian/vegan); Neurology 2024 on UPFs, Framingham Offspring Cohort on choline, and multiple systematic reviews.
