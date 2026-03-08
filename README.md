@@ -15,7 +15,7 @@ Clone into your skills directory:
 git clone https://github.com/hugobellamy/diet-planner ~/.claude/skills/diet-planner
 
 # OpenCode (also searches ~/.claude/skills/ and ~/.agents/skills/)
-git clone https://github.com/hugobellamydiet-planner ~/.config/opencode/skills/diet-planner
+git clone https://github.com/hugobellamy/diet-planner ~/.config/opencode/skills/diet-planner
 
 # OpenClaw
 git clone https://github.com/hugobellamy/diet-planner ~/.openclaw/skills/diet-planner
