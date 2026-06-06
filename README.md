@@ -66,18 +66,32 @@ diet-planner/
     └── profile-template.md
 ```
 
-## Why database-grounding — model nutrition accuracy
+## Why database-grounding — measured
 
-R² scores from the [Food Nutrition Benchmark](https://github.com/hugobellamy/food-data-benchmark) — how well each LLM estimates calories and macros from food descriptions without internet access. Even the best models top out around R²≈0.87, which is the motivation for grounding the numbers in a real food table rather than asking the model to estimate them.
+The [Food Nutrition Benchmark](https://github.com/hugobellamy/food-data-benchmark)
+compares the same models *guessing* macros vs using the database-grounded
+workflow this skill is built on (decompose → search → pick the matching entry and
+weight → sum). Mean R² (higher is better) on the same 50 test meals:
 
-| Model                  |   Calories |   Protein |    Fat |   Carbs |   Mean R² |
-|:-----------------------|-----------:|----------:|-------:|--------:|----------:|
-| gemini-3-flash-preview |     0.8806 |    0.893  | 0.8736 |  0.8164 |    0.8659 |
-| claude-sonnet-4.6      |     0.8273 |    0.7747 | 0.8253 |  0.7823 |    0.8024 |
-| claude-haiku-4.5       |     0.6371 |    0.6205 | 0.7459 |  0.6861 |    0.6724 |
-| qwen3-235b-a22b-2507   |     0.6664 |    0.5876 | 0.62   |  0.6314 |    0.6264 |
+| Model | Without tool (guess) | With tool | Δ |
+|:------|-----------:|---------:|------:|
+| gemma-4-31b (local) | 0.937 | **0.985** | +0.05 |
+| gemini-3.5-flash | 0.948 | **0.984** | +0.04 |
+| claude-sonnet-4.6 | 0.825 | **0.987** | +0.16 |
+| claude-haiku-4.5 | 0.776 | **0.923** | +0.15 |
+| qwen3-235b-a22b-2507 | 0.736 | **0.985** | +0.25 |
 
-See the [full benchmark](https://github.com/hugobellamy/food-data-benchmark) for soft vs raw prompt breakdowns and methodology.
+**The tool helps every model, most where the model is weakest.** Without it the
+models spread from 0.74 to 0.95; with it they converge to ~0.92–0.99 — the
+database equalizes nutrition knowledge, so a cheap model with the tool matches an
+expensive one. The biggest single lever is matching the food's *form* (canned vs
+dried, boiled vs raw) and weighing on that entry's basis.
+
+> Absolute with-tool scores are an optimistic upper bound — the benchmark's test
+> foods are themselves drawn from the McCance database the tool searches. The
+> *within-model improvement* (Δ) is a controlled experiment and is consistently
+> positive. See the [full benchmark](https://github.com/hugobellamy/food-data-benchmark)
+> for methodology, the leakage caveat, and the estimate-only baselines.
 
 ## Research sources
 
