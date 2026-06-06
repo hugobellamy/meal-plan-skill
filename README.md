@@ -1,10 +1,10 @@
 # Diet Planner — Agent Skill
 
-Evidence-based diet planning skill for [Claude Code](https://claude.com/claude-code), [OpenCode](https://opencode.ai), and [OpenClaw](https://openclaw.com). Creates personalised weekly meal plans with recipes, macro tracking, and shopping lists.
+Diet planning skill for [Claude Code](https://claude.com/claude-code), [OpenCode](https://opencode.ai), and [OpenClaw](https://openclaw.com). Creates weekly meal plans based on custom requirments with recipes, macro tracking, and shopping lists.
 
 ## What it does
 
-Runs a setup conversation to build your profile (stats, goals, preferences, restrictions), then generates weekly meal plans with per-recipe macro breakdowns, household-scaled recipes, and shopping lists. Adapts over time based on your feedback and progress. Food choices are guided by reference docs covering sports nutrition, gut health, and vegetarian/vegan needs — loaded automatically based on your profile.
+Runs a setup conversation to build your profile, then generates weekly meal plans with per-recipe macro breakdowns, household-scaled recipes, and shopping lists. Adapts over time based on your feedback and progress. Food choices are guided by reference docs covering sports nutrition, gut health, and vegetarian/vegan needs.
 
 ## Install
 
@@ -35,12 +35,6 @@ Loaded automatically based on your profile tags:
 | `vegetarian.md` | Vegetarian users | Protein quality, iron/B12/omega-3/zinc, creatine |
 | `vegan.md` | Vegan users | Mandatory supplements, protein combining, calcium, iodine |
 
-## Key features
-
-- **Household-aware** — recipes and shopping lists scale for everyone you cook for; calorie tracking stays individual
-- **Macro verification** — every recipe includes an ingredient-by-ingredient breakdown table that must add up
-- **Pack size tracking** — tell the agent your shop's pack sizes to reduce waste
-- **Feedback loop** — mention what worked or didn't and the agent remembers
 
 ## File structure
 
