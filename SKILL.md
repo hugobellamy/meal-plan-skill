@@ -5,7 +5,43 @@ description: Plan weekly meals with macro tracking, batch cooking, and shopping 
 
 # Diet Planner
 
-A diet planning agent that creates personalised weekly meal plans with recipes and shopping lists, grounded in evidence-based nutrition research.
+A diet planning agent that creates personalised weekly meal plans with recipes
+and shopping lists, grounded in evidence-based nutrition research **and in a real
+food-composition database**. You do not estimate macros by hand — you pick real
+foods and amounts, and the tools sum the numbers from the McCance & Widdowson
+CoFID 2021 database. This is far more accurate than free-hand estimation.
+
+## The tools
+
+All tools are plain Python 3 (standard library only — no install needed). They
+live in this skill's `tools/` directory. Run them with the directory this
+`SKILL.md` is in, e.g. `python3 <skill-dir>/tools/meal.py ...`. Run every tool
+with `-h` to see its full options.
+
+| Tool | Purpose |
+|------|---------|
+| `fooddb.py search "<text>"` | Find real foods; returns food codes + per-100g macros |
+| `fooddb.py show <code>` | Full per-100g breakdown for one food |
+| `fooddb.py add ...` | Add a custom food (per 100 g) when something isn't in the table |
+| `meal.py new/add/set/rm/show/list/schedule` | Build and inspect **meal objects** |
+| `week.py totals <week>` | Daily + weekly intake, compared to target |
+| `build.py meal-plan/recipes/all <week>` | Render `meal-plan.md` and `recipes.md` |
+| `shopping.py extract <week>` → `render <week>` | Two-part shopping list |
+
+State lives in the **user's project directory** (where you run the tools):
+```
+profile.md                      # human-readable profile (you write this)
+profile.json                    # optional: {target_daily_calories, macros:{protein_g,carbs_g,fat_g}}
+custom-foods.csv                # optional: foods you added via `fooddb.py add` (per-project)
+weeks/week-NN/
+  meals/<meal_id>.json          # one meal object per file (the source of truth)
+  meal-plan.md  recipes.md  shopping-list.md   # generated — never hand-edit the numbers
+  shopping.json                 # intermediate for the shopping list
+```
+
+A **meal object** is a list of `(food_code, grams)` items plus `portions` and an
+optional `eat_on` schedule. Grams are **total cooked grams (household)**;
+per-portion = total / portions, and is what the user eats.
 
 ## First Run: User Setup
 
@@ -62,7 +98,15 @@ Based on the conversation, determine which reference docs are relevant. Map to t
 
 ### Create Profile
 
-After the conversation, create `profile.md` using `templates/profile-template.md` as a starting point. Fill it in with everything gathered. The meal structure section should be freeform natural language — capture the real complexity of their week.
+After the conversation, create `profile.md` using `templates/profile-template.md`
+as a starting point. Fill it in with everything gathered. The meal structure
+section should be freeform natural language — capture the real complexity of
+their week. Also write a small `profile.json` with the user's daily target so
+`week.py` can check the plan against it:
+
+```json
+{"target_daily_calories": 2800, "macros": {"protein_g": 200, "carbs_g": 280, "fat_g": 85}}
+```
 
 ## Tips
 
@@ -123,69 +167,96 @@ Adjustment triggers:
 - Let the user pick which ones they want
 - Confirm portions, scaling (cooking for others?), and any tweaks
 
-### Step 5: Generate Plan
+### Step 5: Build Meals from the Database
 
-Once meals are agreed, produce three outputs:
+For each agreed meal, build a meal object instead of estimating numbers:
 
-#### 5a. Meal Plan (`meal-plan.md`)
+1. **Find each ingredient's food code** with `fooddb.py search`:
+   ```
+   python3 <skill-dir>/tools/fooddb.py search "chicken breast"
+   python3 <skill-dir>/tools/fooddb.py search "basmati rice boiled"
+   ```
+   Pick the code that best matches how it will actually be eaten (e.g. *boiled*
+   rice if you weigh it cooked, *raw* if you weigh it dry). Use the reference-doc
+   rules to choose between options (lean vs regular mince, etc.).
 
-Shows the user's personal daily nutrition:
-- Each day of the week
-- Each meal with estimated calories and protein
-- Daily totals
-- Only tracks THE USER's intake (not partner portions etc.)
+2. **Create the meal and add items** (grams = total cooked, household scale):
+   ```
+   python3 <skill-dir>/tools/meal.py new 1 chicken-rice --name "Chicken & Rice" --portions 4 --type batch
+   python3 <skill-dir>/tools/meal.py add 1 chicken-rice --code 18-XXX --grams 600
+   python3 <skill-dir>/tools/meal.py add 1 chicken-rice --code 11-858 --grams 800
+   ```
 
-#### 5b. Recipes (`recipes.md`)
+3. **Read the summed macros** with `meal.py show` and tune the amounts until the
+   **per-portion** numbers hit the user's targets. Change an amount with
+   `meal.py set ... --grams`, remove an item with `meal.py rm`:
+   ```
+   python3 <skill-dir>/tools/meal.py show 1 chicken-rice
+   ```
 
-Actual cooking instructions:
-- Scaled to real portions being cooked (if cooking for 2, the recipe makes 2)
-- All portions are the same size — don't make different-sized portions for different people
-- Clear ingredient quantities
-- Simple method (respect their complexity preferences)
-- Each recipe includes a macro breakdown table (see Step 6)
-- **Write the macro breakdown table FIRST, then use those totals in the meal plan** — not the other way around
+4. **If a food genuinely isn't in the database**, add it once with `fooddb.py add`
+   (values per 100 g — from the packet, or a trusted source), then add it to the
+   meal by its new `custom-NNN` code. This keeps every meal fully summable.
 
-#### 5c. Shopping List (`shopping-list.md`)
+5. **Schedule** when each meal is eaten so the weekly plan can lay it out:
+   ```
+   python3 <skill-dir>/tools/meal.py schedule 1 chicken-rice --eat-on "Wed Lunch" "Wed Dinner" "Thu Lunch" "Thu Dinner"
+   ```
 
-Everything needed to buy:
-- Grouped by category (meat, veg, dairy, etc.)
-- Quantities reflect ALL cooking (including portions for others)
-- Match to available pack sizes where known (stored in profile)
-- Note if buying for 2 dinners serving 2 people, that's 4 portions worth of ingredients
+Fixed daily meals (e.g. a standard breakfast) are just a meal with
+`--type fixed` scheduled on every day. Snacks are small meals too.
 
-**Important scope distinction:**
+### Step 6: Check the Week
+
+```
+python3 <skill-dir>/tools/week.py totals 1
+```
+
+This sums every scheduled portion into daily totals and a weekly average, and
+(if `profile.json` has a target) shows how far off target the average is. Adjust
+meals/portions and re-check until it lands where you want.
+
+### Step 7: Render the Outputs
+
+```
+python3 <skill-dir>/tools/build.py all 1          # meal-plan.md + recipes.md
+```
+
+- **`meal-plan.md`** — the user's per-portion intake, day by day, with daily and
+  weekly totals. All numbers come from the database; never hand-edit them.
+- **`recipes.md`** — household-scale ingredient lists with a per-ingredient macro
+  table already filled in. Each recipe has a blank **Method** section: write the
+  actual cooking steps there. That is the only part you author by hand.
+
+Then build the shopping list in two halves:
+```
+python3 <skill-dir>/tools/shopping.py extract 1   # auto: aggregate ingredients -> shopping.json
+# Now edit weeks/week-01/shopping.json: set a "category" for each item
+# (Meat, Fish, Produce, Dairy & Eggs, Frozen, Pantry, Other), and optionally
+# tweak "buy_as" (shop-friendly name) and "qty" (raw weight / pack size).
+python3 <skill-dir>/tools/shopping.py render 1    # auto: grouped shopping-list.md
+```
+
+**Scope distinction** (unchanged, and now enforced by the tools):
+
 | Output | Scope | Tracks |
 |--------|-------|--------|
-| Meal plan | Individual | User's calories and macros only |
-| Recipes | Household | Actual quantities to cook |
+| Meal plan | Individual | User's per-portion calories and macros |
+| Recipes | Household | Actual quantities to cook (all portions) |
 | Shopping list | Household | Everything to buy for all cooking |
 
-### Step 6: Macro Self-Check
+### Step 8: Present and Iterate
 
-**For every recipe, you MUST show your working.**
+Present the plan. Be open to changes. A swap is just `meal.py set/rm/add` + a
+re-run of `build.py` and `shopping.py` — the numbers update themselves.
 
-After writing each recipe, include a breakdown table:
+## Why this is database-grounded
 
-| Ingredient | Amount | kcal | Protein (g) | Carbs (g) | Fat (g) |
-|------------|--------|------|-------------|-----------|---------|
-| Chicken thigh | 150g | 280 | 38 | 0 | 14 |
-| Rice (cooked) | 200g | 260 | 5 | 58 | 0.5 |
-| Broccoli | 100g | 34 | 3 | 7 | 0.4 |
-| Olive oil | 10ml | 88 | 0 | 0 | 10 |
-| **TOTAL** | | **662** | **46** | **65** | **24.9** |
-
-Rules:
-- Estimate each ingredient individually FIRST
-- Sum the column to get the meal total
-- The meal total in the plan MUST match the sum in this table
-- If they don't match, fix the table or fix the plan — do not present inconsistent numbers
-- Per-ingredient estimates should be reasonable (check: does 150g chicken thigh really have 280 kcal?)
-
-This is not optional. The user relies on these numbers for their deficit/surplus.
-
-### Step 7: Present and Iterate
-
-Present the plan to the user. Be open to changes. If they want swaps, go back to the relevant step.
+The macro numbers are **summed from real per-100g rows**, not guessed. The recipe
+macro table and the meal-plan totals are computed from the same meal objects, so
+they are always consistent by construction — there is no separate "self-check"
+to get wrong. Your judgement goes into *which* food and *how much*; the arithmetic
+is the tool's job.
 
 ## Updating the Profile
 
@@ -193,30 +264,23 @@ The user can update their profile at any time:
 - "I don't like mushrooms" → add to dislikes
 - "I bought a slow cooker" → update equipment
 - "My partner is joining dinners 3 nights now" → update meal structure
-- "I want to switch to maintenance" → update goals, recalculate calories
+- "I want to switch to maintenance" → update goals, recalculate calories, update `profile.json`
 
 When updating, edit `profile.md` directly. Don't recreate it.
 
-## File Organisation
+## Refreshing the food database
 
-Weekly plans go in a structured directory:
-```
-weeks/
-  week-01/
-    meal-plan.md
-    recipes.md
-    shopping-list.md
-  week-02/
-    ...
-```
-
-The profile lives at the project root: `profile.md`
+`data/foods.csv` is prebuilt and committed. To rebuild from the McCance source
+workbook (e.g. a newer edition), run `uv run scripts/build_db.py`. User-added
+foods (`fooddb.py add`) live separately in a `custom-foods.csv` in the user's
+project directory — per-project, merged on top of the base table at runtime, and
+untouched by rebuilds or skill updates.
 
 ## Key Principles
 
 1. **Always load reference docs before planning.** This is how you make good food choices instead of generic ones.
 2. **Discuss before deciding.** Don't present a finished plan without the user's input on meal choices.
-3. **Show your working on macros.** Every recipe gets a breakdown table. Numbers must add up.
+3. **Pick foods, don't guess macros.** Search the database, choose the code and the grams, and let the tools sum. Add a custom food rather than free-handing a number.
 4. **Recipes and shopping lists serve the household.** Only the meal plan is individual.
 5. **Keep it simple.** Respect the user's complexity preferences. A one-pot meal is better than a technically optimal meal they won't cook.
 6. **Update the profile.** Learnings, feedback, and changes should persist in `profile.md` so you don't repeat mistakes.

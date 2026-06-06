@@ -6,6 +6,8 @@ Diet planning skill for [Claude Code](https://claude.com/claude-code), [OpenCode
 
 Runs a setup conversation to build your profile, then generates weekly meal plans with per-recipe macro breakdowns, household-scaled recipes, and shopping lists. Adapts over time based on your feedback and progress. Food choices are guided by reference docs covering sports nutrition, gut health, and vegetarian/vegan needs.
 
+**Macros are database-grounded, not estimated.** Instead of the model guessing calories and macros, it picks real foods and amounts from the McCance & Widdowson CoFID 2021 (UK) food-composition database, and small standard-library Python tools sum the numbers from the actual per-100g rows. The model's job is *which food and how much*; the arithmetic is the tool's. The meal-plan totals and the recipe macro tables are computed from the same meal objects, so they're consistent by construction.
+
 ## Install
 
 Clone into your skills directory:
@@ -41,6 +43,18 @@ Loaded automatically based on your profile tags:
 ```
 diet-planner/
 ├── SKILL.md                    # Main skill definition
+├── tools/                      # Database-grounded planning tools (stdlib Python)
+│   ├── fooddb.py               #   search / show / add foods
+│   ├── meal.py                 #   build & inspect meal objects
+│   ├── week.py                 #   daily/weekly totals vs target
+│   ├── build.py                #   render meal-plan.md & recipes.md
+│   ├── shopping.py             #   two-part shopping list
+│   └── _db.py / _state.py      #   shared helpers
+├── data/
+│   ├── foods.csv               # McCance CoFID 2021, per 100 g (committed)
+│   └── source/SOURCE.md        # how to rebuild foods.csv
+├── scripts/
+│   └── build_db.py             # foods.csv builder (run with: uv run)
 ├── docs/                       # Evidence-based reference docs
 │   ├── general-health.md
 │   ├── sports-performance.md
@@ -52,9 +66,9 @@ diet-planner/
     └── profile-template.md
 ```
 
-## Model nutrition accuracy
+## Why database-grounding — model nutrition accuracy
 
-R² scores from the [Food Nutrition Benchmark](https://github.com/hugobellamy/food-data-benchmark) — how well each LLM estimates calories and macros from food descriptions without internet access.
+R² scores from the [Food Nutrition Benchmark](https://github.com/hugobellamy/food-data-benchmark) — how well each LLM estimates calories and macros from food descriptions without internet access. Even the best models top out around R²≈0.87, which is the motivation for grounding the numbers in a real food table rather than asking the model to estimate them.
 
 | Model                  |   Calories |   Protein |    Fat |   Carbs |   Mean R² |
 |:-----------------------|-----------:|----------:|-------:|--------:|----------:|
