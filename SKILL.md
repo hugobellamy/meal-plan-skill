@@ -176,9 +176,13 @@ For each agreed meal, build a meal object instead of estimating numbers:
    python3 <skill-dir>/tools/fooddb.py search "chicken breast"
    python3 <skill-dir>/tools/fooddb.py search "basmati rice boiled"
    ```
-   Pick the code that best matches how it will actually be eaten (e.g. *boiled*
-   rice if you weigh it cooked, *raw* if you weigh it dry). Use the reference-doc
-   rules to choose between options (lean vs regular mince, etc.).
+   **Match the form actually eaten, and weigh on that entry's basis.** This is
+   the single biggest source of error if you get it wrong: *canned* vs *dried*
+   beans differ ~3×; *boiled* vs *raw* rice/pasta differ ~3×; with/without skin,
+   fried vs grilled, etc. Read the candidate names and pick the one whose form
+   matches, then make the grams consistent with it (a *boiled* entry takes the
+   cooked weight; a *dried/raw* entry takes the dry weight). Use the reference-doc
+   rules to choose between otherwise-equivalent options (lean vs regular mince).
 
 2. **Create the meal and add items** (grams = total cooked, household scale):
    ```
@@ -249,6 +253,29 @@ python3 <skill-dir>/tools/shopping.py render 1    # auto: grouped shopping-list.
 
 Present the plan. Be open to changes. A swap is just `meal.py set/rm/add` + a
 re-run of `build.py` and `shopping.py` — the numbers update themselves.
+
+## Counting calories of a described meal
+
+When the user describes a meal they ate (a free meal, eating out, "what was in
+that?") rather than building one from chosen foods, count it with the same
+database — **don't guess the macros**. Use this four-step loop:
+
+1. **Decompose** the meal into its component foods (e.g. "a cheese sandwich" →
+   bread, cheese, butter).
+2. **Search** each component: `fooddb.py search "<food>"`.
+3. **Pick the entry and the weight together.** From each component's candidates,
+   choose the row whose *form* matches what was eaten (canned vs dried, boiled vs
+   raw, fried vs grilled) and estimate the grams eaten on that entry's basis. Do
+   the picking *after* seeing the candidates — the chosen entry tells you which
+   basis the weight is in.
+4. **Sum** by building a throwaway meal (`meal.py new/add` then `meal.py show`),
+   or just add up the per-100g rows × grams.
+
+This decompose → search → pick-entry-and-weight → sum loop is exactly the
+technique validated in the [food benchmark](https://github.com/hugobellamy/food-data-benchmark):
+across five models it beat free-hand estimation every time, and the biggest gains
+came from steps 3 (matching the form) — getting *canned vs dried* right is worth
+more than any model's built-in nutrition knowledge.
 
 ## Why this is database-grounded
 
