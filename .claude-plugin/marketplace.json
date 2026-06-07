@@ -1,6 +1,9 @@
 {
   "name": "hugobellamy",
   "owner": { "name": "Hugo Bellamy" },
+  "metadata": {
+    "description": "Hugo Bellamy's Claude Code plugins."
+  },
   "plugins": [
     {
       "name": "diet-planner",
