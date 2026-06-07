@@ -1,7 +1,7 @@
 # The McCance source workbook is large (~4.6 MB) and only needed to rebuild
-# data/foods.csv. The built foods.csv is committed; see data/source/SOURCE.md
+# foods.csv. The built foods.csv is committed; see data/source/SOURCE.md
 # to fetch the workbook when refreshing the database.
-data/source/*.xlsx
+skills/diet-planner/data/source/*.xlsx
 
 __pycache__/
 *.pyc

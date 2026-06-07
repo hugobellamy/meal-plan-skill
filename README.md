@@ -10,20 +10,38 @@ Runs a setup conversation to build your profile, then generates weekly meal plan
 
 ## Install
 
-Clone into your skills directory:
+### Claude Code — in-app, no terminal (recommended)
 
-```bash
-# Claude Code
-git clone https://github.com/hugobellamy/diet-planner ~/.claude/skills/diet-planner
+This repo is a [plugin marketplace](https://code.claude.com/docs/en/plugin-marketplaces).
+In any Claude Code session (CLI, desktop app, or web), run:
 
-# OpenCode (also searches ~/.claude/skills/ and ~/.agents/skills/)
-git clone https://github.com/hugobellamy/diet-planner ~/.config/opencode/skills/diet-planner
-
-# OpenClaw
-git clone https://github.com/hugobellamy/diet-planner ~/.openclaw/skills/diet-planner
+```
+/plugin marketplace add hugobellamy/meal-plan-skill
+/plugin install diet-planner@hugobellamy
 ```
 
-Then start a new session and say something like "help me plan my meals for the week".
+That's the whole install — no `git clone`, no terminal. Then open (or create) a
+folder to keep your meal plans in, and say something like *"help me plan my meals
+for the week"*. The skill activates on its own; your profile and weekly plans are
+saved in that folder, so it's worth giving meal-planning its own directory.
+
+### Manual install (OpenCode, OpenClaw, or a plain skill folder)
+
+The skill itself lives in `skills/diet-planner/`. Clone the repo once and link
+that subfolder into your agent's skills directory:
+
+```bash
+git clone https://github.com/hugobellamy/meal-plan-skill ~/.local/share/meal-plan-skill
+
+# Claude Code
+ln -s ~/.local/share/meal-plan-skill/skills/diet-planner ~/.claude/skills/diet-planner
+# OpenCode (also searches ~/.claude/skills/ and ~/.agents/skills/)
+ln -s ~/.local/share/meal-plan-skill/skills/diet-planner ~/.config/opencode/skills/diet-planner
+# OpenClaw
+ln -s ~/.local/share/meal-plan-skill/skills/diet-planner ~/.openclaw/skills/diet-planner
+```
+
+`git pull` in the clone then updates every linked install.
 
 ## Reference docs
 
@@ -41,29 +59,35 @@ Loaded automatically based on your profile tags:
 ## File structure
 
 ```
-diet-planner/
-├── SKILL.md                    # Main skill definition
-├── tools/                      # Database-grounded planning tools (stdlib Python)
-│   ├── fooddb.py               #   search / show / add foods
-│   ├── meal.py                 #   build & inspect meal objects
-│   ├── week.py                 #   daily/weekly totals vs target
-│   ├── build.py                #   render meal-plan.md & recipes.md
-│   ├── shopping.py             #   two-part shopping list
-│   └── _db.py / _state.py      #   shared helpers
-├── data/
-│   ├── foods.csv               # McCance CoFID 2021, per 100 g (committed)
-│   └── source/SOURCE.md        # how to rebuild foods.csv
-├── scripts/
-│   └── build_db.py             # foods.csv builder (run with: uv run)
-├── docs/                       # Evidence-based reference docs
-│   ├── general-health.md
-│   ├── sports-performance.md
-│   ├── gut-microbiome.md
-│   ├── vegetarian.md
-│   ├── vegan.md
-│   └── tips.md
-└── templates/
-    └── profile-template.md
+meal-plan-skill/                 # repo root = marketplace + plugin
+├── .claude-plugin/
+│   ├── plugin.json              # plugin manifest
+│   └── marketplace.json         # marketplace catalog (this repo hosts itself)
+├── skills/
+│   └── diet-planner/            # the skill
+│       ├── SKILL.md             # main skill definition
+│       ├── tools/               # Database-grounded planning tools (stdlib Python)
+│       │   ├── fooddb.py        #   search / show / add foods
+│       │   ├── meal.py          #   build & inspect meal objects
+│       │   ├── week.py          #   daily/weekly totals vs target
+│       │   ├── build.py         #   render meal-plan.md & recipes.md
+│       │   ├── shopping.py      #   two-part shopping list
+│       │   └── _db.py / _state.py
+│       ├── data/
+│       │   ├── foods.csv        # McCance CoFID 2021, per 100 g (committed)
+│       │   └── source/SOURCE.md # how to rebuild foods.csv
+│       ├── scripts/
+│       │   └── build_db.py      # foods.csv builder (run with: uv run)
+│       ├── docs/                # Evidence-based reference docs
+│       │   ├── general-health.md
+│       │   ├── sports-performance.md
+│       │   ├── gut-microbiome.md
+│       │   ├── vegetarian.md
+│       │   ├── vegan.md
+│       │   └── tips.md
+│       └── templates/
+│           └── profile-template.md
+└── README.md
 ```
 
 ## Why database-grounding — measured

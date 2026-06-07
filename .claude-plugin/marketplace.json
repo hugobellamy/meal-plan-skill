@@ -1,0 +1,11 @@
+{
+  "name": "hugobellamy",
+  "owner": { "name": "Hugo Bellamy" },
+  "plugins": [
+    {
+      "name": "diet-planner",
+      "source": "./",
+      "description": "Database-grounded weekly meal planning: macro tracking, batch-cook recipes, and shopping lists, grounded in the McCance & Widdowson CoFID 2021 food database."
+    }
+  ]
+}

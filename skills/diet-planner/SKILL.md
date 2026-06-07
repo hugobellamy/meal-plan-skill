@@ -14,9 +14,11 @@ CoFID 2021 database. This is far more accurate than free-hand estimation.
 ## The tools
 
 All tools are plain Python 3 (standard library only — no install needed). They
-live in this skill's `tools/` directory. Run them with the directory this
-`SKILL.md` is in, e.g. `python3 <skill-dir>/tools/meal.py ...`. Run every tool
-with `-h` to see its full options.
+live in this skill's `tools/` directory. Invoke them through the
+`${CLAUDE_SKILL_DIR}` variable, which the runtime expands to this skill's
+directory wherever it's installed (cloned skill or installed plugin), e.g.
+`python3 ${CLAUDE_SKILL_DIR}/tools/meal.py ...`. Run every tool with `-h` to see
+its full options.
 
 | Tool | Purpose |
 |------|---------|
@@ -173,8 +175,8 @@ For each agreed meal, build a meal object instead of estimating numbers:
 
 1. **Find each ingredient's food code** with `fooddb.py search`:
    ```
-   python3 <skill-dir>/tools/fooddb.py search "chicken breast"
-   python3 <skill-dir>/tools/fooddb.py search "basmati rice boiled"
+   python3 ${CLAUDE_SKILL_DIR}/tools/fooddb.py search "chicken breast"
+   python3 ${CLAUDE_SKILL_DIR}/tools/fooddb.py search "basmati rice boiled"
    ```
    **Match the form actually eaten, and weigh on that entry's basis.** This is
    the single biggest source of error if you get it wrong: *canned* vs *dried*
@@ -186,16 +188,16 @@ For each agreed meal, build a meal object instead of estimating numbers:
 
 2. **Create the meal and add items** (grams = total cooked, household scale):
    ```
-   python3 <skill-dir>/tools/meal.py new 1 chicken-rice --name "Chicken & Rice" --portions 4 --type batch
-   python3 <skill-dir>/tools/meal.py add 1 chicken-rice --code 18-XXX --grams 600
-   python3 <skill-dir>/tools/meal.py add 1 chicken-rice --code 11-858 --grams 800
+   python3 ${CLAUDE_SKILL_DIR}/tools/meal.py new 1 chicken-rice --name "Chicken & Rice" --portions 4 --type batch
+   python3 ${CLAUDE_SKILL_DIR}/tools/meal.py add 1 chicken-rice --code 18-XXX --grams 600
+   python3 ${CLAUDE_SKILL_DIR}/tools/meal.py add 1 chicken-rice --code 11-858 --grams 800
    ```
 
 3. **Read the summed macros** with `meal.py show` and tune the amounts until the
    **per-portion** numbers hit the user's targets. Change an amount with
    `meal.py set ... --grams`, remove an item with `meal.py rm`:
    ```
-   python3 <skill-dir>/tools/meal.py show 1 chicken-rice
+   python3 ${CLAUDE_SKILL_DIR}/tools/meal.py show 1 chicken-rice
    ```
 
 4. **If a food genuinely isn't in the database**, add it once with `fooddb.py add`
@@ -204,7 +206,7 @@ For each agreed meal, build a meal object instead of estimating numbers:
 
 5. **Schedule** when each meal is eaten so the weekly plan can lay it out:
    ```
-   python3 <skill-dir>/tools/meal.py schedule 1 chicken-rice --eat-on "Wed Lunch" "Wed Dinner" "Thu Lunch" "Thu Dinner"
+   python3 ${CLAUDE_SKILL_DIR}/tools/meal.py schedule 1 chicken-rice --eat-on "Wed Lunch" "Wed Dinner" "Thu Lunch" "Thu Dinner"
    ```
 
 Fixed daily meals (e.g. a standard breakfast) are just a meal with
@@ -213,7 +215,7 @@ Fixed daily meals (e.g. a standard breakfast) are just a meal with
 ### Step 6: Check the Week
 
 ```
-python3 <skill-dir>/tools/week.py totals 1
+python3 ${CLAUDE_SKILL_DIR}/tools/week.py totals 1
 ```
 
 This sums every scheduled portion into daily totals and a weekly average, and
@@ -223,7 +225,7 @@ meals/portions and re-check until it lands where you want.
 ### Step 7: Render the Outputs
 
 ```
-python3 <skill-dir>/tools/build.py all 1          # meal-plan.md + recipes.md
+python3 ${CLAUDE_SKILL_DIR}/tools/build.py all 1          # meal-plan.md + recipes.md
 ```
 
 - **`meal-plan.md`** — the user's per-portion intake, day by day, with daily and
@@ -234,11 +236,11 @@ python3 <skill-dir>/tools/build.py all 1          # meal-plan.md + recipes.md
 
 Then build the shopping list in two halves:
 ```
-python3 <skill-dir>/tools/shopping.py extract 1   # auto: aggregate ingredients -> shopping.json
+python3 ${CLAUDE_SKILL_DIR}/tools/shopping.py extract 1   # auto: aggregate ingredients -> shopping.json
 # Now edit weeks/week-01/shopping.json: set a "category" for each item
 # (Meat, Fish, Produce, Dairy & Eggs, Frozen, Pantry, Other), and optionally
 # tweak "buy_as" (shop-friendly name) and "qty" (raw weight / pack size).
-python3 <skill-dir>/tools/shopping.py render 1    # auto: grouped shopping-list.md
+python3 ${CLAUDE_SKILL_DIR}/tools/shopping.py render 1    # auto: grouped shopping-list.md
 ```
 
 **Scope distinction** (unchanged, and now enforced by the tools):

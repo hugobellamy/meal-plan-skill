@@ -1,0 +1,8 @@
+{
+  "name": "diet-planner",
+  "description": "Database-grounded weekly meal planning — macro tracking, batch-cook recipes, and shopping lists, grounded in the McCance & Widdowson CoFID 2021 UK food-composition database.",
+  "version": "0.1.0",
+  "author": { "name": "Hugo Bellamy" },
+  "homepage": "https://github.com/hugobellamy/meal-plan-skill",
+  "repository": "https://github.com/hugobellamy/meal-plan-skill"
+}
